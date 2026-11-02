@@ -1,0 +1,75 @@
+name: Compilation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Clippy (zéro avertissement)
+        run: cargo clippy --all-targets -- -D warnings
+      - name: Compilation release
+        run: cargo build --release
+      - name: Artefact Windows
+        uses: actions/upload-artifact@v4
+        with:
+          name: creeper-woods-windows
+          path: target/release/creeper_woods.exe
+
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Compilation release
+        run: cargo build --release
+      - name: Artefact Linux
+        uses: actions/upload-artifact@v4
+        with:
+          name: creeper-woods-linux
+          path: target/release/creeper_woods
+
+  release:
+    name: Release v0.1.0
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Renomme les binaires
+        run: |
+          mv artifacts/creeper-woods-windows/creeper_woods.exe Creeper-Woods-Windows.exe
+          mv artifacts/creeper-woods-linux/creeper_woods Creeper-Woods-Linux
+          chmod +x Creeper-Woods-Linux
+      - name: Publie la release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.1.0
+          name: Creeper Woods — v0.1.0
+          body: |
+            Recréation de la mission **Creeper Woods** (Minecraft Dungeons) en Rust + wgpu.
+            - HUD français, 10 zones, Nécromancien (600 PV), âmes plafonnées à 300
+            - Combo de mêlée mémorisé entre les pauses, roulade avec i-frames
+            - Textures procédurales remplaçables (`assets/textures/`), modèles `.obj` (`assets/models/`)
+            - Windows : décompresser et lancer `Creeper-Woods-Windows.exe` (aucune dépendance)
+          files: |
+            Creeper-Woods-Windows.exe
+            Creeper-Woods-Linux
+          make_latest: true

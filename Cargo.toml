@@ -1,0 +1,22 @@
+[package]
+name = "creeper_woods"
+version = "0.1.0"
+edition = "2021"
+description = "Recréation de la mission Creeper Woods (Minecraft Dungeons) — moteur Rust + wgpu, HUD français, textures procédurales + chargeur d'assets"
+license = "MIT"
+
+[dependencies]
+wgpu = "24"
+winit = "0.30"
+glam = "0.29"
+bytemuck = { version = "1", features = ["derive"] }
+ab_glyph = "0.2"
+image = { version = "0.25", default-features = false, features = ["png"] }
+pollster = "0.4"
+log = "0.4"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
